@@ -1,75 +1,39 @@
 import 'package:flutter/material.dart';
-import 'screen/signup.dart';  // Import the signup screen
-import 'screen/login.dart';   // Import the login screen
+import 'screen/splash_screen.dart';
+import 'screen/login.dart';
+import 'screen/MainScreen.dart';
+import 'screen/profile_screen.dart';
+import 'screen/chat-app.dart';
+import 'screen/settings_screen.dart';
+import 'utils/app_theme.dart';
 
 void main() {
-  runApp(const MainApp());
+  runApp(const MyApp());
 }
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'BalWijzer',
       theme: ThemeData(
-        primaryColor: Colors.green,
-        scaffoldBackgroundColor: Colors.white,
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            foregroundColor: Colors.white,
-            backgroundColor: Colors.green,
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-          ),
-        ),
+        primaryColor: AppTheme.primaryColor,
+        scaffoldBackgroundColor: AppTheme.backgroundColor,
+        colorScheme: ColorScheme.fromSeed(seedColor: AppTheme.primaryColor),
+        useMaterial3: true,
       ),
-      home: const HomeScreen(),
-      // Define routes
+      initialRoute: '/',
       routes: {
-        '/signup': (context) => const SignUpScreen(),  // Route for SignUpScreen
-        '/login': (context) => const LoginPage(),      // Route for LoginPage
+        '/': (context) => const SplashScreen(),
+        '/login': (context) => const LoginPage(),
+        '/main': (context) => const MainScreen(),
+        '/profile': (context) => const ProfileScreen(),
+        '/chat': (context) => const ChatPage(),
+        '/settings': (context) => const SettingsScreen(),
       },
-    );
-  }
-}
-
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Welcome'),
-        backgroundColor: Colors.green,
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              'Welcome to Our App!',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 40),
-            ElevatedButton(
-              onPressed: () {
-                // Ensure this works by using pushNamed for login
-                Navigator.pushNamed(context, '/login');
-              },
-              child: const Text('Login'),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                // Navigate to the SignUpScreen using the route
-                Navigator.pushNamed(context, '/signup');
-              },
-              child: const Text('Sign Up'),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
