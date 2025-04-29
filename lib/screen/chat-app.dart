@@ -8,10 +8,27 @@ class ChatPage extends StatefulWidget {
   _ChatPageState createState() => _ChatPageState();
 }
 
-class _ChatPageState extends State<ChatPage> {
+class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   List<Map<String, String>> _messages = [];
+
+  late AnimationController _sendButtonController;
+
+  @override
+  void initState() {
+    super.initState();
+    _sendButtonController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+    );
+  }
+
+  @override
+  void dispose() {
+    _sendButtonController.dispose();
+    super.dispose();
+  }
 
   void _sendMessage() {
     if (_controller.text.isEmpty) return;
@@ -131,49 +148,62 @@ class _ChatPageState extends State<ChatPage> {
                   child: Align(
                     alignment:
                         isUser ? Alignment.centerRight : Alignment.centerLeft,
-                    child: Container(
-                      constraints: BoxConstraints(
-                        maxWidth: MediaQuery.of(context).size.width * 0.75,
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isUser ? AppTheme.primaryColor : Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 5,
-                            offset: const Offset(0, 2),
+                    child: TweenAnimationBuilder<double>(
+                      tween: Tween(begin: 0, end: 1),
+                      duration: const Duration(milliseconds: 400),
+                      builder: (context, value, child) {
+                        return Opacity(
+                          opacity: value,
+                          child: Transform.translate(
+                            offset: Offset(0, 30 * (1 - value)),
+                            child: child,
                           ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            message['message'] ?? '',
-                            style: TextStyle(
-                              color: isUser ? Colors.white : Colors.black87,
-                              fontSize: 16,
+                        );
+                      },
+                      child: Container(
+                        constraints: BoxConstraints(
+                          maxWidth: MediaQuery.of(context).size.width * 0.75,
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isUser ? AppTheme.primaryColor : Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 5,
+                              offset: const Offset(0, 2),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            DateTime.parse(message['time'] ?? '')
-                                .toLocal()
-                                .toString()
-                                .substring(11, 16),
-                            style: TextStyle(
-                              color: isUser
-                                  ? Colors.white.withOpacity(0.7)
-                                  : Colors.black54,
-                              fontSize: 12,
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              message['message'] ?? '',
+                              style: TextStyle(
+                                color: isUser ? Colors.white : Colors.black87,
+                                fontSize: 16,
+                              ),
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: 4),
+                            Text(
+                              DateTime.parse(message['time'] ?? '')
+                                  .toLocal()
+                                  .toString()
+                                  .substring(11, 16),
+                              style: TextStyle(
+                                color: isUser
+                                    ? Colors.white.withOpacity(0.7)
+                                    : Colors.black54,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -182,7 +212,7 @@ class _ChatPageState extends State<ChatPage> {
             ),
           ),
 
-          // Input Area
+          // Input Area with animation on send button
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -222,15 +252,24 @@ class _ChatPageState extends State<ChatPage> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryColor,
-                      shape: BoxShape.circle,
+                  ScaleTransition(
+                    scale: CurvedAnimation(
+                      parent: _sendButtonController,
+                      curve: Curves.easeInOut,
                     ),
-                    child: IconButton(
-                      icon: const Icon(Icons.send_rounded),
-                      color: Colors.white,
-                      onPressed: _sendMessage,
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        color: AppTheme.primaryColor,
+                        shape: BoxShape.circle,
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.send_rounded),
+                        color: Colors.white,
+                        onPressed: () {
+                          _sendMessage();
+                          _sendButtonController.forward(from: 0);
+                        },
+                      ),
                     ),
                   ),
                 ],

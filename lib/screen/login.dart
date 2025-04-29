@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+// import 'package:http/http.dart' as http;
+// import 'dart:convert';
 import 'package:email_validator/email_validator.dart';
 
 class LoginPage extends StatefulWidget {
@@ -10,7 +10,8 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LoginPageState extends State<LoginPage>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -19,7 +20,7 @@ class _LoginPageState extends State<LoginPage> {
 
   // Define your color scheme
   static const primaryColor = Color(0xFF1E88E5); // A nice blue shade
-  static const accentColor = Color(0xFFFFA726); // Orange accent
+  // static const accentColor = Color(0xFFFFA726); // Orange accent
   static const backgroundColor = Color(0xFFF5F5F5); // Light grey background
   static const textColor = Color(0xFF424242); // Dark grey text
 
@@ -170,6 +171,25 @@ Example valid passwords:
     }
   }
 
+  late AnimationController _logoController;
+  late Animation<double> _logoAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _logoController = AnimationController(
+      duration: const Duration(seconds: 3),
+      vsync: this,
+    );
+
+    _logoAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _logoController, curve: Curves.elasticOut),
+    );
+
+    _logoController.forward();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -183,16 +203,19 @@ Example valid passwords:
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const SizedBox(height: 60),
-                Hero(
-                  tag: 'app_logo',
-                  child: Image.asset(
-                    'assets/logo.png',
-                    width: 150,
-                    height: 150,
+                ScaleTransition(
+                  scale: _logoAnimation,
+                  child: Hero(
+                    tag: 'app_logo',
+                    child: Image.asset(
+                      'assets/logo.png',
+                      width: 150,
+                      height: 150,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 40),
-                Text(
+                const Text(
                   'Welcome Back!',
                   style: TextStyle(
                     fontSize: 28,
@@ -228,12 +251,12 @@ Example valid passwords:
                     decoration: InputDecoration(
                       labelText: 'Email',
                       hintText: 'Enter your email',
-                      prefixIcon: Icon(Icons.email, color: primaryColor),
+                      prefixIcon: const Icon(Icons.email, color: primaryColor),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(15),
                         borderSide: BorderSide.none,
                       ),
-                      floatingLabelStyle: TextStyle(color: primaryColor),
+                      floatingLabelStyle: const TextStyle(color: primaryColor),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -266,7 +289,7 @@ Example valid passwords:
                     decoration: InputDecoration(
                       labelText: 'Password',
                       hintText: 'Enter your password',
-                      prefixIcon: Icon(Icons.lock, color: primaryColor),
+                      prefixIcon: const Icon(Icons.lock, color: primaryColor),
                       suffixIcon: IconButton(
                         icon: Icon(
                           _isPasswordVisible
@@ -284,7 +307,7 @@ Example valid passwords:
                         borderRadius: BorderRadius.circular(15),
                         borderSide: BorderSide.none,
                       ),
-                      floatingLabelStyle: TextStyle(color: primaryColor),
+                      floatingLabelStyle: const TextStyle(color: primaryColor),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -326,7 +349,7 @@ Example valid passwords:
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
+                    const Text(
                       'Don\'t have an account? ',
                       style: TextStyle(
                         color: textColor,
@@ -362,6 +385,7 @@ Example valid passwords:
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _logoController.dispose();
     super.dispose();
   }
 }

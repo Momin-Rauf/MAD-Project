@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mad_project/screen/signup.dart';
 import 'screen/splash_screen.dart';
 import 'screen/login.dart';
 import 'screen/MainScreen.dart';
@@ -29,6 +30,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const SplashScreen(),
         '/login': (context) => const LoginPage(),
+        '/signup': (context) => const SignUpScreen(),
         '/main': (context) => const MainScreen(),
         '/profile': (context) => const ProfileScreen(),
         '/chat': (context) => const ChatPage(),

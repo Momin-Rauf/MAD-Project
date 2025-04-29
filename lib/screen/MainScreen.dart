@@ -20,7 +20,7 @@ class _MainScreenState extends State<MainScreen> {
     super.didChangeDependencies();
     // Get user data from route arguments
     userData =
-        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>? ??
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>? ?? 
             {
               'name': 'Guest User',
               'email': 'guest@example.com',
@@ -34,13 +34,15 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
-      body: IndexedStack(
-        index: _currentIndex,
-        children: [
-          HomeScreen(userData: userData),
-          const ChatPage(),
-          const SettingsScreen(),
-        ],
+      body: SafeArea(  // Ensure the content doesn't overlap with system UI
+        child: IndexedStack(
+          index: _currentIndex,
+          children: [
+            HomeScreen(userData: userData),
+            const ChatPage(),
+            const SettingsScreen(),
+          ],
+        ),
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(

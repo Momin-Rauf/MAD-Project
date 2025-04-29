@@ -8,7 +8,7 @@ class SignUpScreen extends StatefulWidget {
   _SignUpScreenState createState() => _SignUpScreenState();
 }
 
-class _SignUpScreenState extends State<SignUpScreen> {
+class _SignUpScreenState extends State<SignUpScreen>  with SingleTickerProviderStateMixin{
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -18,7 +18,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   // Use the same color scheme as login page
   static const primaryColor = Color(0xFF1E88E5);
-  static const accentColor = Color(0xFFFFA726);
+  // static const accentColor = Color(0xFFFFA726);
   static const backgroundColor = Color(0xFFF5F5F5);
   static const textColor = Color(0xFF424242);
 
@@ -120,6 +120,25 @@ Example valid passwords:
     }
   }
 
+  late AnimationController _logoController;
+  late Animation<double> _logoAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _logoController = AnimationController(
+      duration: const Duration(seconds: 3),
+      vsync: this,
+    );
+
+    _logoAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _logoController, curve: Curves.elasticOut),
+    );
+
+    _logoController.forward();
+  }  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -133,12 +152,15 @@ Example valid passwords:
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const SizedBox(height: 60),
-                Hero(
-                  tag: 'app_logo',
-                  child: Image.asset(
-                    'assets/logo.png',
-                    width: 150,
-                    height: 150,
+                ScaleTransition(
+                  scale: _logoAnimation,
+                  child: Hero(
+                    tag: 'app_logo',
+                    child: Image.asset(
+                      'assets/logo.png',
+                      width: 150,
+                      height: 150,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 40),
