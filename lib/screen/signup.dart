@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:email_validator/email_validator.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'verification.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -89,25 +92,74 @@ Example valid passwords:
       });
 
       try {
-        // Here you would typically make an API call to create the user account
-        // For now, we'll simulate a successful signup
+        // API endpoint
+        final Uri apiUrl = Uri.parse('https://streamsite-ball-wijzer.vercel.app/api/signup');
+        
+        // Make the API call
+        final response = await http.post(
+          apiUrl,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({
+            'username': username,
+            'email': email,
+            'password': password,
+          }),
+        );
 
-        // Show success message
-        _showSnackBar('Account created successfully!');
+        // Print response for debugging
+        print('Response status code: ${response.statusCode}');
+        print('Response body: ${response.body}');
 
-        // Wait for 1 second to show the success message
-        await Future.delayed(const Duration(seconds: 1));
+        // Handle the response
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          final responseData = jsonDecode(response.body);
+          
+          // Check if the response contains an error message
+          if (responseData['error'] != null) {
+            _showSnackBar(responseData['error']);
+            return;
+          }
+          
+          _showSnackBar('Account created successfully!');
 
-        if (mounted) {
-          // Navigate to verification screen
-          Navigator.pushNamedAndRemoveUntil(
-            context,
-            '/verification',
-            (route) => false, // Remove all previous routes
-          );
+          // Wait for 1 second to show the success message
+          await Future.delayed(const Duration(seconds: 1));
+
+          if (mounted) {
+            // Navigate to verification screen
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => VerificationScreen(username: username),
+              ),
+            );
+          }
+        } else {
+          // Handle different error cases
+          String errorMessage = 'Failed to create account';
+          try {
+            final errorData = jsonDecode(response.body);
+            if (errorData['error'] != null) {
+              errorMessage = errorData['error'];
+            } else if (errorData['message'] != null) {
+              errorMessage = errorData['message'];
+            }
+          } catch (e) {
+            print('Error parsing response: $e');
+          }
+          
+          _showSnackBar(errorMessage);
         }
       } catch (error) {
-        _showSnackBar('Failed to create account. Please try again.');
+        // Handle network or other errors
+        print('Error during signup: $error');
+        String errorMessage = 'Failed to create account';
+        if (error.toString().contains('SocketException')) {
+          errorMessage = 'No internet connection. Please check your network';
+        }
+        _showSnackBar(errorMessage);
       } finally {
         if (mounted) {
           setState(() {
