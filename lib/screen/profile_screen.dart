@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../utils/app_theme.dart';
 import '../models/profile_dto.dart';
+import '../services/user_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -15,6 +16,9 @@ class _ProfileScreenState extends State<ProfileScreen>
   late AnimationController _buttonController;
   late List<Animation<Offset>> _slideAnimations;
   late List<Animation<double>> _fadeAnimations;
+
+  final UserService _userService = UserService();
+  bool _isUpdating = false;
 
   @override
   void initState() {
@@ -256,6 +260,114 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
+  Future<void> _handleEditProfile() async {
+    final ProfileDTO currentProfile =
+        ModalRoute.of(context)?.settings.arguments as ProfileDTO;
+
+    // Show edit dialog
+    final result = await showDialog<ProfileDTO>(
+      context: context,
+      builder: (context) => _EditProfileDialog(currentProfile: currentProfile),
+    );
+
+    if (result != null) {
+      setState(() {
+        _isUpdating = true;
+      });
+
+      try {
+        await _userService.updateProfile(result);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Profile updated successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
+
+          // Update the profile data in the current screen
+          setState(() {
+            // Update the profile data
+          });
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to update profile: ${e.toString()}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isUpdating = false;
+          });
+        }
+      }
+    }
+  }
+
+  Widget _EditProfileDialog({required ProfileDTO currentProfile}) {
+    final nameController = TextEditingController(text: currentProfile.name);
+    final phoneController = TextEditingController(text: currentProfile.phone);
+    final emailController = TextEditingController(text: currentProfile.email);
+    final addressController =
+        TextEditingController(text: currentProfile.address);
+
+    return AlertDialog(
+      title: const Text('Edit Profile'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(labelText: 'Name'),
+            ),
+            TextField(
+              controller: phoneController,
+              decoration: const InputDecoration(labelText: 'Phone'),
+              keyboardType: TextInputType.phone,
+            ),
+            TextField(
+              controller: emailController,
+              decoration: const InputDecoration(labelText: 'Email'),
+              keyboardType: TextInputType.emailAddress,
+            ),
+            TextField(
+              controller: addressController,
+              decoration: const InputDecoration(labelText: 'Address'),
+              maxLines: 2,
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () {
+            final updatedProfile = ProfileDTO(
+              name: nameController.text,
+              imageName: currentProfile.imageName,
+              phone: phoneController.text,
+              email: emailController.text,
+              biometric: currentProfile.biometric,
+              address: addressController.text,
+            );
+            Navigator.pop(context, updatedProfile);
+          },
+          child: const Text('Save'),
+        ),
+      ],
+    );
+  }
+
   Widget _buildActionButtons() {
     return Column(
       children: [
@@ -271,9 +383,19 @@ class _ProfileScreenState extends State<ProfileScreen>
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                icon: const Icon(Icons.edit),
-                label: const Text('Edit Profile'),
-                onPressed: () {},
+                icon: _isUpdating
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : const Icon(Icons.edit),
+                label: Text(_isUpdating ? 'Updating...' : 'Edit Profile'),
+                onPressed: _isUpdating ? null : _handleEditProfile,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primaryColor,
                   foregroundColor: Colors.white,
