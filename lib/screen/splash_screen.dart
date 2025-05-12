@@ -85,7 +85,7 @@ class _SplashScreenState extends State<SplashScreen> {
         ),
         const SizedBox(height: 30),
         const Text(
-          'BalWijzer',
+          'Soccerly',
           style: TextStyle(
             color: Colors.white,
             fontSize: 36,
@@ -153,13 +153,14 @@ class _SplashScreenState extends State<SplashScreen> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 12),
                       elevation: 4,
                     ),
                     child: const Text(
                       'Next',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                   )
                 : const SizedBox.shrink(),

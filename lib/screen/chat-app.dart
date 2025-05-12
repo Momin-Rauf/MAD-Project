@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../utils/app_theme.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
@@ -12,6 +14,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   List<Map<String, String>> _messages = [];
+  bool _isLoading = false;
 
   late AnimationController _sendButtonController;
 
@@ -30,63 +33,71 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  void _sendMessage() {
+  Future<String> _getChatbotResponse(String query) async {
+    try {
+      final response = await http.post(
+        Uri.parse(
+            'https://chatbot-ball-wijzer-production.up.railway.app/api/chatbot'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'query': query,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['response'] ?? 'Sorry, I could not process your request.';
+      } else {
+        return 'Sorry, there was an error processing your request.';
+      }
+    } catch (e) {
+      return 'Sorry, there was an error connecting to the server.';
+    }
+  }
+
+  void _sendMessage() async {
     if (_controller.text.isEmpty) return;
 
+    final userMessage = _controller.text;
+    _controller.clear();
+
     setState(() {
+      _isLoading = true;
       // Add user message
       _messages.add({
         'sender': 'user',
-        'message': _controller.text,
+        'message': userMessage,
         'time': DateTime.now().toString(),
       });
+    });
 
-      // Simulate bot response
-      Future.delayed(const Duration(milliseconds: 500), () {
-        setState(() {
-          String userQuery = _controller.text.toLowerCase();
-          String botResponse;
+    // Scroll to bottom after user sends message
+    _scrollController.animateTo(
+      _scrollController.position.maxScrollExtent,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
 
-          if (userQuery.contains('match') || userQuery.contains('score')) {
-            botResponse =
-                'Here are the match stats:\n\nTeam A: 2 - 1 Team B\n\nTop Scorer: Player A (1 goal)';
-          } else if (userQuery.contains('player stats') ||
-              userQuery.contains('player')) {
-            botResponse =
-                'Player A Stats:\n• Goals: 3\n• Assists: 1\n• Yellow Cards: 2\n• Minutes Played: 270';
-          } else {
-            botResponse =
-                'How can I help you with football information? You can ask about:\n• Match scores\n• Player statistics\n• Team rankings';
-          }
+    // Get response from chatbot
+    final botResponse = await _getChatbotResponse(userMessage);
 
-          _messages.add({
-            'sender': 'bot',
-            'message': botResponse,
-            'time': DateTime.now().toString(),
-          });
-
-          // Scroll to bottom after bot responds
-          Future.delayed(const Duration(milliseconds: 100), () {
-            _scrollController.animateTo(
-              _scrollController.position.maxScrollExtent,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeOut,
-            );
-          });
-        });
-      });
-
-      _controller.clear();
-
-      // Scroll to bottom after user sends message
-      Future.delayed(const Duration(milliseconds: 100), () {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
+    setState(() {
+      _isLoading = false;
+      _messages.add({
+        'sender': 'bot',
+        'message': botResponse,
+        'time': DateTime.now().toString(),
       });
     });
+
+    // Scroll to bottom after bot responds
+    _scrollController.animateTo(
+      _scrollController.position.maxScrollExtent,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
   }
 
   @override
@@ -276,6 +287,36 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
               ),
             ),
           ),
+
+          // Add this after your ListView.builder in the build method
+          if (_isLoading)
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      Text('Thinking...'),
+                    ],
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
