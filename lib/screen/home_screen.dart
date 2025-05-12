@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../utils/app_theme.dart';
 import '../models/profile_dto.dart';
+import '../widgets/live_matches.dart';
 
 class HomeScreen extends StatefulWidget {
   final Map<String, dynamic> userData;
@@ -156,57 +157,88 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   Text('Quick Actions',
                       style: AppTheme.headingStyle.copyWith(fontSize: 20)),
                   const SizedBox(height: 16),
-                  GridView.count(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 16,
-                    crossAxisSpacing: 16,
-                    children: [
-                      _animatedCard(
-                          _buildActionCard(
-                            'Profile',
-                            Icons.person,
-                            AppTheme.primaryColor,
-                            onTap: () => Navigator.pushNamed(
-                              context,
-                              '/profile',
-                              arguments: ProfileDTO(
-                                name: widget.userData['name'],
-                                imageName: widget.userData['imageName'],
-                                phone: widget.userData['phone'] ?? '',
-                                email: widget.userData['email'] ?? '',
-                                biometric:
-                                    widget.userData['biometric'] ?? false,
-                                address: widget.userData['address'] ?? '',
+                  Container(
+                    width: 320,
+                    child: GridView.count(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisCount: 2,
+                      mainAxisSpacing: 16,
+                      crossAxisSpacing: 16,
+                      children: [
+                        _animatedCard(
+                            _buildActionCard(
+                              'Profile',
+                              Icons.person,
+                              AppTheme.primaryColor,
+                              onTap: () => Navigator.pushNamed(
+                                context,
+                                '/profile',
+                                arguments: ProfileDTO(
+                                  name: widget.userData['name'],
+                                  imageName: widget.userData['imageName'],
+                                  phone: widget.userData['phone'] ?? '',
+                                  email: widget.userData['email'] ?? '',
+                                  biometric:
+                                      widget.userData['biometric'] ?? false,
+                                  address: widget.userData['address'] ?? '',
+                                ),
                               ),
                             ),
+                            0),
+                        _animatedCard(
+                            _buildActionCard(
+                              'Messages',
+                              Icons.message,
+                              AppTheme.secondaryColor,
+                              onTap: () =>
+                                  Navigator.pushNamed(context, '/chat'),
+                            ),
+                            1),
+                        _animatedCard(
+                            _buildActionCard(
+                              'Settings',
+                              Icons.settings,
+                              Colors.purple,
+                              onTap: () =>
+                                  Navigator.pushNamed(context, '/settings'),
+                            ),
+                            2),
+                        _animatedCard(
+                            _buildActionCard(
+                              'Help',
+                              Icons.help,
+                              Colors.teal,
+                            ),
+                            3),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Live Matches',
+                            style: AppTheme.headingStyle.copyWith(fontSize: 20),
                           ),
-                          0),
-                      _animatedCard(
-                          _buildActionCard(
-                            'Messages',
-                            Icons.message,
-                            AppTheme.secondaryColor,
-                            onTap: () => Navigator.pushNamed(context, '/chat'),
+                          IconButton(
+                            icon: const Icon(Icons.refresh),
+                            onPressed: () {
+                              setState(() {});
+                            },
+                            tooltip: 'Refresh matches',
                           ),
-                          1),
-                      _animatedCard(
-                          _buildActionCard(
-                            'Settings',
-                            Icons.settings,
-                            Colors.purple,
-                            onTap: () =>
-                                Navigator.pushNamed(context, '/settings'),
-                          ),
-                          2),
-                      _animatedCard(
-                          _buildActionCard(
-                            'Help',
-                            Icons.help,
-                            Colors.teal,
-                          ),
-                          3),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        height: 200,
+                        child: const LiveMatches(),
+                      ),
                     ],
                   ),
                 ],
@@ -282,37 +314,30 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   angle: _hovering ? _rotationAnimation.value : 0,
                   child: Transform.scale(
                     scale: _hovering ? _scaleAnimation.value : 1,
-                    child: Container(
-                      decoration: AppTheme.cardDecoration.copyWith(
-                        boxShadow: _hovering
-                            ? [
-                                BoxShadow(
-                                  color: color.withOpacity(0.3),
-                                  blurRadius: 20,
-                                  offset: const Offset(0, 8),
-                                ),
-                              ]
-                            : [],
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          AnimatedContainer(
-                            duration: const Duration(milliseconds: 300),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: color.withOpacity(_hovering ? 0.2 : 0.1),
-                              shape: BoxShape.circle,
+                    child: Card(
+                      clipBehavior: Clip.hardEdge,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 20, 12),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: color.withOpacity(_hovering ? 0.2 : 0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(icon, size: 32, color: color),
                             ),
-                            child: Icon(icon, size: 32, color: color),
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            title,
-                            style: const TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
-                        ],
+                            const SizedBox(height: 12),
+                            Text(
+                              title,
+                              style: const TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),

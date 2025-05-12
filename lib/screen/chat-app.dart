@@ -4,7 +4,10 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class ChatPage extends StatefulWidget {
-  const ChatPage({super.key});
+  final int? fixtureId;
+  final String? matchTitle;
+
+  const ChatPage({super.key, this.fixtureId, this.matchTitle});
 
   @override
   _ChatPageState createState() => _ChatPageState();
@@ -35,19 +38,37 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
 
   Future<String> _getChatbotResponse(String query) async {
     try {
-      final response = await http.post(
-        Uri.parse(
-            'https://chatbot-ball-wijzer-production.up.railway.app/api/chatbot'),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
+      String url;
+      Map<String, dynamic> body;
+
+      if (widget.fixtureId != null) {
+        url =
+            'https://chatbot-ball-wijzer-production.up.railway.app/api/live-chat';
+        body = {
           'query': query,
-        }),
+          'fixture_id': widget.fixtureId.toString(), // always string!
+        };
+      } else {
+        url =
+            'https://chatbot-ball-wijzer-production.up.railway.app/api/chatbot';
+        body = {
+          'query': query,
+        };
+      }
+
+      print('Sending to $url with body: $body');
+
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(body),
       );
+
+      print('Response: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+        // For /live-chat, the key is 'response'
         return data['response'] ?? 'Sorry, I could not process your request.';
       } else {
         return 'Sorry, there was an error processing your request.';
@@ -108,7 +129,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Football ChatBot'),
+            Text(widget.matchTitle ?? 'Football ChatBot'),
             Text(
               'Online',
               style: TextStyle(
