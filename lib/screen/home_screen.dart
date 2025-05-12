@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../utils/app_theme.dart';
 import '../models/profile_dto.dart';
 import '../widgets/live_matches.dart';
+import '../models/news_model.dart';
+import '../services/news_services.dart';
 
 class HomeScreen extends StatefulWidget {
   final Map<String, dynamic> userData;
@@ -22,6 +24,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late Animation<double> _picAnimation;
 
   late AnimationController _iconController;
+
+  List<NewsModel> _news = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -52,6 +57,33 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       duration: const Duration(seconds: 2),
       vsync: this,
     )..repeat(reverse: true);
+
+    _fetchNews();
+  }
+
+  void _fetchNews() async {
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      final news = await NewsService().getNews();
+      setState(() {
+        _news = news;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading news: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -66,7 +98,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
       duration: const Duration(milliseconds: 400),
-      // Removed the delay parameter as it is not supported
       builder: (context, value, child) => Opacity(
         opacity: value,
         child: Transform.translate(
@@ -154,93 +185,31 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Quick Actions',
-                      style: AppTheme.headingStyle.copyWith(fontSize: 20)),
+                  Text(
+                    'Latest News',
+                    style: AppTheme.headingStyle.copyWith(fontSize: 22),
+                  ),
                   const SizedBox(height: 16),
-                  Container(
-                    width: 320,
-                    child: GridView.count(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 16,
-                      crossAxisSpacing: 16,
-                      children: [
-                        _animatedCard(
-                            _buildActionCard(
-                              'Profile',
-                              Icons.person,
-                              AppTheme.primaryColor,
-                              onTap: () => Navigator.pushNamed(
-                                context,
-                                '/profile',
-                                arguments: ProfileDTO(
-                                  name: widget.userData['name'],
-                                  imageName: widget.userData['imageName'],
-                                  phone: widget.userData['phone'] ?? '',
-                                  email: widget.userData['email'] ?? '',
-                                  biometric:
-                                      widget.userData['biometric'] ?? false,
-                                  address: widget.userData['address'] ?? '',
-                                ),
-                              ),
+                  _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : _news.isEmpty
+                          ? const Text('No news available at the moment.')
+                          : Column(
+                              children: _news
+                                  .map((news) => _buildNewsCard(news))
+                                  .toList(),
                             ),
-                            0),
-                        _animatedCard(
-                            _buildActionCard(
-                              'Messages',
-                              Icons.message,
-                              AppTheme.secondaryColor,
-                              onTap: () =>
-                                  Navigator.pushNamed(context, '/chat'),
-                            ),
-                            1),
-                        _animatedCard(
-                            _buildActionCard(
-                              'Settings',
-                              Icons.settings,
-                              Colors.purple,
-                              onTap: () =>
-                                  Navigator.pushNamed(context, '/settings'),
-                            ),
-                            2),
-                        _animatedCard(
-                            _buildActionCard(
-                              'Help',
-                              Icons.help,
-                              Colors.teal,
-                            ),
-                            3),
-                      ],
-                    ),
+                  const SizedBox(height: 32),
+                  Text(
+                    'Live Matches',
+                    style: AppTheme.headingStyle.copyWith(fontSize: 20),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 200,
+                    child: const LiveMatches(),
                   ),
                   const SizedBox(height: 32),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Live Matches',
-                            style: AppTheme.headingStyle.copyWith(fontSize: 20),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.refresh),
-                            onPressed: () {
-                              setState(() {});
-                            },
-                            tooltip: 'Refresh matches',
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      SizedBox(
-                        height: 200,
-                        child: const LiveMatches(),
-                      ),
-                    ],
-                  ),
                 ],
               ),
               const SizedBox(height: 24),
@@ -367,6 +336,82 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
       subtitle: Text(subtitle),
       trailing: const Icon(Icons.chevron_right),
+    );
+  }
+
+  Widget _buildNewsCard(NewsModel news) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 20),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 4,
+      child: InkWell(
+        onTap: () {
+          // Optionally open the news URL
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (news.image.isNotEmpty)
+              ClipRRect(
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(16)),
+                child: Image.network(
+                  news.image,
+                  height: 180,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    height: 180,
+                    color: Colors.grey[200],
+                    child: const Icon(Icons.broken_image,
+                        size: 60, color: Colors.grey),
+                  ),
+                ),
+              ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    news.title,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    news.description,
+                    style: const TextStyle(fontSize: 15, color: Colors.black87),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        news.source,
+                        style: TextStyle(
+                          color: AppTheme.primaryColor,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        news.publishedAt.split('T').first,
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

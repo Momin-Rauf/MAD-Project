@@ -9,7 +9,8 @@ class ProfileScreen extends StatefulWidget {
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateMixin {
+class _ProfileScreenState extends State<ProfileScreen>
+    with TickerProviderStateMixin {
   late AnimationController _cardController;
   late AnimationController _buttonController;
   late List<Animation<Offset>> _slideAnimations;
@@ -137,11 +138,14 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                     [
                       _buildInfoItem(Icons.email, 'Email', profileData.email),
                       _buildInfoItem(Icons.phone, 'Phone', profileData.phone),
-                      _buildInfoItem(Icons.location_on, 'Address', profileData.address),
+                      _buildInfoItem(
+                          Icons.location_on, 'Address', profileData.address),
                     ],
                     [
-                      _buildInfoItem(Icons.calendar_today, 'Joined', additionalData['joinDate']),
-                      _buildInfoItem(Icons.circle, 'Status', additionalData['status'],
+                      _buildInfoItem(Icons.calendar_today, 'Joined',
+                          additionalData['joinDate']),
+                      _buildInfoItem(
+                          Icons.circle, 'Status', additionalData['status'],
                           customIcon: Container(
                             width: 8,
                             height: 8,
@@ -154,8 +158,10 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                           profileData.biometric ? 'Enabled' : 'Disabled'),
                     ],
                     [
-                      _buildInfoItem(Icons.folder, 'Total Projects', additionalData['totalProjects']),
-                      _buildInfoItem(Icons.access_time, 'Last Active', additionalData['lastActive']),
+                      _buildInfoItem(Icons.folder, 'Total Projects',
+                          additionalData['totalProjects']),
+                      _buildInfoItem(Icons.access_time, 'Last Active',
+                          additionalData['lastActive']),
                     ],
                   ];
 
@@ -176,7 +182,8 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                 })
                   ..add(ScaleTransition(
                     scale: Tween<double>(begin: 0.95, end: 1.0).animate(
-                      CurvedAnimation(parent: _cardController, curve: Curves.elasticOut),
+                      CurvedAnimation(
+                          parent: _cardController, curve: Curves.elasticOut),
                     ),
                     child: _buildActionButtons(),
                   )),
@@ -220,7 +227,8 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
     );
   }
 
-  Widget _buildInfoItem(IconData icon, String label, String value, {Widget? customIcon}) {
+  Widget _buildInfoItem(IconData icon, String label, String value,
+      {Widget? customIcon}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
@@ -234,10 +242,12 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+                Text(label,
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600])),
                 const SizedBox(height: 4),
                 Text(value.isEmpty ? 'Not provided' : value,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w500)),
               ],
             ),
           ),

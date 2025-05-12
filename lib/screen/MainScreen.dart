@@ -3,6 +3,8 @@ import '../utils/app_theme.dart';
 import 'chat-app.dart';
 import 'settings_screen.dart';
 import 'home_screen.dart';
+import 'profile_screen.dart';
+import '../models/profile_dto.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -20,7 +22,7 @@ class _MainScreenState extends State<MainScreen> {
     super.didChangeDependencies();
     // Get user data from route arguments
     userData =
-        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>? ?? 
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>? ??
             {
               'name': 'Guest User',
               'email': 'guest@example.com',
@@ -34,13 +36,15 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
-      body: SafeArea(  // Ensure the content doesn't overlap with system UI
+      body: SafeArea(
+        // Ensure the content doesn't overlap with system UI
         child: IndexedStack(
           index: _currentIndex,
           children: [
             HomeScreen(userData: userData),
             const ChatPage(),
             const SettingsScreen(),
+            ProfileScreen(),
           ],
         ),
       ),
@@ -60,6 +64,21 @@ class _MainScreenState extends State<MainScreen> {
             setState(() {
               _currentIndex = index;
             });
+            if (index == 3) {
+              // Profile tab index
+              Navigator.pushNamed(
+                context,
+                '/profile',
+                arguments: ProfileDTO(
+                  name: userData['name'],
+                  imageName: userData['imageName'],
+                  phone: userData['phone'] ?? '',
+                  email: userData['email'] ?? '',
+                  biometric: userData['biometric'] ?? false,
+                  address: userData['address'] ?? '',
+                ),
+              );
+            }
           },
           items: const [
             BottomNavigationBarItem(
@@ -76,6 +95,11 @@ class _MainScreenState extends State<MainScreen> {
               icon: Icon(Icons.settings_outlined),
               activeIcon: Icon(Icons.settings),
               label: 'Settings',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline),
+              activeIcon: Icon(Icons.person),
+              label: 'Profile',
             ),
           ],
           selectedItemColor: AppTheme.primaryColor,
